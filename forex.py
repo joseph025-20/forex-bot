@@ -18,14 +18,23 @@ from email.mime.multipart import MIMEMultipart
 
 # ---------------- CONFIG ----------------
 # Twelve Data API key (you provided)
-TD_API_KEY = os.environ.get("TD_API_KEY", "36fc1a8e78b04087a01478ea48fc0716")
-NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY", "1b9a3ec7f5874defa4de862175267e67v")
+# API keys
+TD_API_KEY = os.environ.get("TD_API_KEY")
+NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY")
 
-# Email defaults (edit if needed)
-FROM_EMAIL = os.environ.get("FOREX_FROM_EMAIL", "kamjoselast1@gmail.com")
-APP_PASSWORD = os.environ.get("FOREX_APP_PASSWORD", "xigk hqjh goae thnn")  # replace with 16-char app password (no spaces)
-TO_EMAILS = os.environ.get("FOREX_TO_EMAILS", "josephwmwangi024@gmail.com,jcol64614@gmail.com").split(",")
+# Email settings
+FROM_EMAIL = os.environ.get("FOREX_FROM_EMAIL")
+APP_PASSWORD = os.environ.get("FOREX_APP_PASSWORD")
 
+TO_EMAILS = [
+    email.strip()
+    for email in os.environ.get("FOREX_TO_EMAILS", "").split(",")
+    if email.strip()
+]
+
+# Check required credentials
+if not all([TD_API_KEY, NEWSAPI_KEY, FROM_EMAIL, APP_PASSWORD, TO_EMAILS]):
+    raise ValueError("One or more required credentials are missing.")
 # Money & risk
 ACCOUNT_SIZE = float(os.environ.get("ACCOUNT_SIZE", "10.0"))  # $10 default as requested
 RISK_PER_TRADE_PCT = float(os.environ.get("RISK_PER_TRADE_PCT", "0.01"))  # 1% default
