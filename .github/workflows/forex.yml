@@ -1,9 +1,9 @@
-
 name: Daily Forex Email Report
 
 on:
   schedule:
-    - cron: "7 6 * * *"
+    - cron: "0 9 * * *"
+      timezone: "Africa/Nairobi"
   workflow_dispatch:
 
 jobs:
@@ -26,9 +26,9 @@ jobs:
 
       - name: Generate and email forex report
         env:
-          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
-          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
-          EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-          RECIPIENT_EMAILS: ${{ secrets.RECIPIENT_EMAILS }}
+          TD_API_KEY: ${{ secrets.TD_API_KEY }}
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+          FOREX_FROM_EMAIL: ${{ secrets.FOREX_FROM_EMAIL }}
+          FOREX_APP_PASSWORD: ${{ secrets.FOREX_APP_PASSWORD }}
+          FOREX_TO_EMAILS: ${{ secrets.FOREX_TO_EMAILS }}
         run: python forex.py
