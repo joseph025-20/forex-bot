@@ -5,7 +5,102 @@ import csv
 import smtplib
 import math
 import logging
+import requests#!/usr/bin/env python3
+import os
+import time
+import csv
+import smtplib
+import math
+import logging
 import requests
+
+import numpy as np
+import pandas as pd
+
+from datetime import datetime, timedelta, timezone
+from newsapi import NewsApiClient
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+# ---------------- CONFIG ----------------
+# Twelve Data API key (you provided)
+# API keys
+TD_API_KEY = os.environ.get("TD_API_KEY")
+NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY")
+
+# Email settings
+FROM_EMAIL = os.environ.get("FOREX_FROM_EMAIL")
+APP_PASSWORD = os.environ.get("FOREX_APP_PASSWORD")
+
+TO_EMAILS = [
+    email.strip()
+    for email in os.environ.get("FOREX_TO_EMAILS", "").split(",")
+    if email.strip()
+]
+
+# Check required credentials
+if not all([TD_API_KEY, NEWSAPI_KEY, FROM_EMAIL, APP_PASSWORD, TO_EMAILS]):
+    raise ValueError("One or more required credentials are missing.")
+# Money & risk
+ACCOUNT_SIZE = float(os.environ.get("ACCOUNT_SIZE", "10.0"))  # $10 default as requested
+RISK_PER_TRADE_PCT = float(os.environ.get("RISK_PER_TRADE_PCT", "0.01"))  # 1% default
+STOP_ATR_MULT = float(os.environ.get("STOP_ATR_MULT", "1.5"))
+TARGET_RR = float(os.environ.get("TARGET_RR", "2.0"))
+
+# Pairs list (base, quote)
+PAIRS = [
+    ("EUR/USD", "EUR", "USD"),
+    ("GBP/USD", "GBP", "USD"),
+    ("USD/JPY", "USD", "JPY"),
+    ("USD/CHF", "USD", "CHF"),
+    ("AUD/USD", "AUD", "USD"),
+    ("USD/CAD", "USD", "CAD"),
+    ("XAU/USD", "XAU", "USD"),
+]
+
+LOG_FILE = os.environ.get("FOREX_LOG_FILE", "forex_trades_log.csv")
+
+# Rate-limit friendly pauses (Twelve Data free tier generous but keep polite)
+TD_SLEEP_SECONDS = float(os.environ.get("TD_SLEEP_SECONDS", "0.8"))
+NEWS_SLEEP_SECONDS = float(os.environ.get("NEWS_SLEEP_SECONDS", "1.0"))
+
+TEST_MODE = os.environ.get("TEST_MODE", "False").lower() in ("1", "true", "yes")
+
+# Lot sizing
+LOT_SIZE_UNITS = 100_000
+MIN_LOT = 0.01
+LOT_STEP = 0.01
+
+# ---------------- LOGGING ----------------
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
+
+# ---------------- CLIENTS ----------------
+news_client = NewsApiClient(api_key=NEWSAPI_KEY) if NEWSAPI_KEY else None
+vader = SentimentIntensityAnalyzer()
+
+# ---------------- TWELVE DATA HELPERS ----------------
+def td_time_series(symbol: str, interval: str = "1day", outputsize: int = 500):
+    """Fetch time series (daily) from Twelve Data. Returns list of dicts (newest first) or (None, error)."""
+    url = "https://api.twelvedata.com/time_series"
+    params = {"symbol": symbol, "interval": interval, "outputsize": outputsize, "apikey": TD_API_KEY, "format": "JSON"}
+    try:
+        r = requests.get(url, params=params, timeout=15)
+        data = r.json()
+        if "values" in data:
+            return data["values"], None
+        # sometimes API returns a single price response or an error
+        if "code" in data or "status" in data:
+            return None, data
+        return None, data
+    except Exception as e:
+        return None, {"error": str(e)}
+
+def fetch_daily_td(base: str, quote: str):
+    """Return a list of daily bars for base/quote using Twelve Data symbol format 'BASE/QUOTE'."""
+    symbol = f"{base}/{quote}"
+    values, err = td_time_series(symbol)
+    time.sleep(TD_SLEEP_SECONDS)
 
 import numpy as np
 import pandas as pd
