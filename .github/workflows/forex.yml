@@ -2,7 +2,7 @@ name: Daily Forex Email Report
 
 on:
   schedule:
-    - cron: "0 6 * * *"
+    - cron: "7 6 * * *"
   workflow_dispatch:
 
 jobs:
