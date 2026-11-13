@@ -3,6 +3,7 @@ name: Daily Forex Email Report
 on:
   schedule:
     - cron: "7 6 * * *"
+      timezone: "Africa/Nairobi"
   workflow_dispatch:
 
 jobs:
