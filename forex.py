@@ -401,8 +401,8 @@ def fetch_news_for_keyword(keyword: str, hours: int = 24, page_size: int = 6):
         resp = news_client.get_everything(
             q=keyword,
             language="en",
-            from_param=from_dt.isoformat(timespec='seconds') + "Z",
-            to=to_dt.isoformat(timespec='seconds') + "Z",
+            from_param=from_dt.isoformat(timespec='seconds'),
+            to=to_dt.isoformat(timespec='seconds'),
             sort_by="publishedAt",
             page_size=page_size
         )
